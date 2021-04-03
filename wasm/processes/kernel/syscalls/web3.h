@@ -1,0 +1,1 @@
+EDGEOS_SYSCALL(web3_subscribe)

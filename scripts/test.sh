@@ -1,0 +1,1 @@
+xvfb-run npm test
