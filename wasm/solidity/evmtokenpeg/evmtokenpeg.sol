@@ -1,6 +1,6 @@
 //SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
-import "../../node_modules/@openzeppelin/contracts/math/SafeMath.sol";
+import "../../../node_modules/@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "../evmlink/evmlink.sol";
 import "../IERC20/IERC20.sol";
 

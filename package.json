@@ -27,15 +27,16 @@
     "webpack-cli": "^4.0.0"
   },
   "dependencies": {
+    "@openzeppelin/contracts": "^4.0.0",
     "@wasmer/wasi": "^0.12.0",
     "@wasmer/wasm-transformer": "^0.12.0",
     "@wasmer/wasmfs": "^0.12.0",
-    "electron": "^11.2.3",
-    "electron-builder": "^20.44.4",
     "bthreads": "^0.5.1",
     "buffer": "^5.7.0",
     "cids": "^1.0.2",
     "core-js": "^3.6.5",
+    "electron": "^11.2.3",
+    "electron-builder": "^20.44.4",
     "eosjs": "^20.0.0",
     "ipfs": "^0.51.0",
     "it-pipe": "^1.1.0",
@@ -56,6 +57,7 @@
     "sha256": "^0.2.0",
     "stream-to-string": "^1.2.0",
     "strongly-typed-events": "^1.6.22",
+    "truffle-contract": "^4.0.31",
     "uint8arrays": "^1.1.0",
     "web3": "^1.3.4"
   }

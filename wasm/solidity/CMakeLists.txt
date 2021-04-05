@@ -14,7 +14,7 @@ macro(sol paramTarget paramSource )
         "--overwrite"
         "--allow-paths"
         "/"
-        "zeppelin-contracts=$${CMAKE_CURRENT_SOURCE_DIR}/node_modules/zeppelin-contracts"
+        "zeppelin-contracts=${CMAKE_CURRENT_SOURCE_DIR}/../node_modules/zeppelin-contracts"
         "${CMAKE_CURRENT_SOURCE_DIR}/${paramSource}.sol"
         DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/${paramSource}.sol"
         
