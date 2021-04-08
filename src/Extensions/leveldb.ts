@@ -16,7 +16,7 @@ var level = require('level')
 //     console.log('name=' + value)
 //   })
 
-export const leveldbextension = {
+export const leveldbextension = { // per processid db
     "leveldb_get":{
         args:["string"],
         callbackType: "string",

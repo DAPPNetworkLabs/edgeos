@@ -71,32 +71,35 @@ function convertArgs(args){
     return realArgs;
 }
 
-function proxyFunc(key, definitionsEntry){
+function proxyFunc(key){
     return (...oargs)=>{
-        if(!definitionsEntry)
-            return;
         const args = convertArgs(oargs);  
-        parent.call('syscall',[{key, args}]).then(res=>{
-            // const res2 = encodeString(res);
-            // const cb = oargs[oargs.length-2]; 
-            // const cbcb = oargs[oargs.length-1];   
-            // const callbackFn = callback(cb);
-  
-            // callbackFn(res.length,res2,cbcb);
-        });
+        try{
+            parent.call('syscall',[{key, args}]).then(res=>{
+                // const res2 = encodeString(res);
+                // const cb = oargs[oargs.length-2]; 
+                // const cbcb = oargs[oargs.length-1];   
+                // const callbackFn = callback(cb);
+    
+                // callbackFn(res.length,res2,cbcb);
+            });
+        }
+        catch(e){
+            console.log(e)
+            throw e;
+        }
     };
 }
 function toProxies(importNames){
     const res = {};
     Object.keys(importNames).forEach(key=>{
-        let val = importNames[key];
-        res[key] = proxyFunc(key,val);
+        res[key] = proxyFunc(key);
     })
     return res;
 }
 
 let ginstance;
-parent.hook('init', async function({wasm,imports,processArgs,ipfsHash}) {
+parent.hook('init', async function({wasm,imports,processArgs,fshash,command}) {
     
     const wasmFs = new WasmFs();
     // wasm = Buffer.from(wasm);
@@ -167,7 +170,6 @@ parent.hook('init', async function({wasm,imports,processArgs,ipfsHash}) {
             // useful for using WASI in diferent environments
             // such as Node.js, Browsers, ...
             bindings: {
-                // hrtime: (time?: [number, number]) -> number
                 // exit: (code?: number) -> void
                 // kill: (pid: number, signal?: string | number) -> void
                 // randomFillSync: (buffer: Buffer, offset?: number, size?: number) -> Buffer
@@ -200,7 +202,6 @@ parent.hook('init', async function({wasm,imports,processArgs,ipfsHash}) {
     
 });
 parent.hook('callback', async function({cb,cbcb,result}) {
-    // console.log('got callback');
     const r = JSON.stringify(result);
     const res2 = encodeString(r);
     callback(cb)(r.length,res2,cbcb);

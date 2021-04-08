@@ -1,5 +1,7 @@
 EDGEOS_SYSCALL(spawn)
+EDGEOS_SYSCALL(schedule)
 EDGEOS_SYSCALL(ipc_call)
+
 
 WASM_EXPORT int edgeos_syscall_writefile(int pathlen, const char *pathstr,int textlen, char *text, int pid) {
     return writeFile(pathstr,text);

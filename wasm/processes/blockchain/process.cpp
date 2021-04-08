@@ -105,6 +105,8 @@ void start(){
 }
 int main(int argc, const char **argv){
     // restore snapshot
+    const char * prm = argv[0];
+    elog("chain process running: " + std::string(prm));
 
     // start from known verifiers
     // connect to beacons topic

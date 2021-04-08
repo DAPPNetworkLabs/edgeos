@@ -1,1 +1,5 @@
 EDGEOS_SYSCALL(web3_subscribe)
+EDGEOS_SYSCALL(web3_contract_call)
+EDGEOS_SYSCALL(web3_estimate_gas)
+EDGEOS_SYSCALL(web3_get_last_nonce)
+EDGEOS_SYSCALL(web3_contract_send)

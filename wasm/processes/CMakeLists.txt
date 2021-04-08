@@ -1,4 +1,5 @@
 add_subdirectory(kernel)
-add_subdirectory(initprocess)
+add_subdirectory(dsp_init)
+add_subdirectory(user_init)
 add_subdirectory(bridge)
 add_subdirectory(blockchain)

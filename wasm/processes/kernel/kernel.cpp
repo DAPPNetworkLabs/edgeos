@@ -19,24 +19,33 @@ void spawnInitProcess(json init_opts){
     elog("init process loading from:" + ipfshash);
     json p = {
         {"hash", ipfshash},
+        {"initOpts",init_opts}
     };
+    
+
     edgeos_ipfs_read(&p, [](json * result){
         // json result = (json)json::parse(jsonRes);
         // auto res = (result);
         auto res = (*result);
-        auto wasm = res["bytes"].get<std::string>();
+        auto wasm = res["bytes"].get<std::string>();        
+        std::string opts = res["request"]["initOpts"].dump();
+        elog("loaded process from ipfs: " + std::to_string(wasm.size()));
         json p2 = {
             {"wasm", wasm},
+            {"pid", 1},
+            {"fshash",""},
+            {"owner","system"},
+            {"command",""},
+            {"args", {opts}},
         };        
          edgeos_spawn(&p2, [](json * spawn_result){
             auto res2 = (*spawn_result);
-            auto pid = res2["pid"];
-            elog("init process loaded:" + std::to_string(pid.get<int>()));
+            auto pid = res2["pid"].get<std::string>();
+            elog("init process loaded:" + pid);
         });
     });
     
 }
-
 
 // kernel main
 int main(int argc, const char **argv){

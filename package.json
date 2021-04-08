@@ -5,7 +5,7 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "test": "npm run build:cmake && env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' mocha -r ts-node/register 'tests/**/*.ts'",
+    "test": "npm run build:cmake && ./scripts/start.sh && env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' mocha -r ts-node/register 'tests/**/*.ts'",
     "link": "npm run build && cd dist && npm link",
     "build:ts": "tsc && webpack && rm -rf dist/static && cp -a static dist/static",
     "build:cmake": "cd wasm && ./compile.sh && cd ..",

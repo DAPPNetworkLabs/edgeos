@@ -16,7 +16,8 @@ cbfunc_t cbfunc =
         }; 
 
 #define EDGEOS_SYSCALL(name) \
-WASM_IMPORT int _edgeos_##name(ARSG) __attribute__(( \
+[[clang::import_module("edgeos"), clang::import_name(STR(name))]] \
+int _edgeos_##name(ARSG) __attribute__(( \
     __import_module__("edgeos"), \
     __import_name__(STR(name)) \
 )); \

@@ -21,7 +21,7 @@ macro(sol paramTarget paramSource )
    VERBATIM  )
 endmacro(sol)
 
-sol(nexus "nexus/nexus")
+sol(nexus "nexus/Nexus")
 sol(evmtokenpeg "evmtokenpeg/evmtokenpeg")
 
 

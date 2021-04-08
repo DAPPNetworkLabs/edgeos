@@ -12,31 +12,34 @@ using json = nlohmann::json;
 
 #define QUOTE(name) #name
 #define STR(macro) QUOTE(macro)
-#define ARSG int jsonLen, const char *json, int pid, void cb(int jsonResLen, const char * jsonRes,int cbcb), int cb2
+#define ARSG int jsonLen, const char *json, int pidLen, const char* pidStr, void cb(int jsonResLen, const char * jsonRes,int cbcb), int cb2
 typedef void (*cbfunc_t)(int jsonResLen, const char * jsonRes,int cb);
 typedef void (*cbfunc_j_t)(json * jsonRes);
 
 cbfunc_t cbfunc =
     [](int jsonResLen, const char * jsonRes, int cb){ 
-            json result = (json)json::parse(jsonRes); 
+            json result = (json)json::parse(jsonRes, nullptr, false); 
+            if(result.is_discarded()){
+                return;
+            }
             auto ax = (cbfunc_j_t)cb;
             ax(&result);
         }; 
 #define EDGEOS_SYSCALL(name) \
-[[clang::import_module("edgeos"), clang::import_name(STR(name))]] \
-int _edgeos_##name(ARSG)  __attribute__(( \
+WASM_IMPORT int _edgeos_##name(ARSG)  __attribute__(( \
     __import_module__("edgeos"), \
     __import_name__(STR(name)) \
 )); \
 WASM_EXPORT int edgeos_syscall_##name(ARSG){\
-    return _edgeos_##name(jsonLen,json,pid,cb,cb2); \
+    return _edgeos_##name(jsonLen,json,pidLen,pidStr,cb,cb2); \
 }; \
 int edgeos_##name(json *a,void callback(json * message)) {\
     auto jsonParams = a->dump(); \
     return _edgeos_##name( \
         jsonParams.size(), \
         jsonParams.c_str(), \
-        0, \
+        1, \
+        "0", \
         cbfunc, \
         (int)callback \
     ); \

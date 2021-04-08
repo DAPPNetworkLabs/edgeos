@@ -8,19 +8,17 @@ export const web3extensions = {
                     cid:0
                 };
             }
-            let web3 = new Web3(json.nexus.ethEndpoint);
-            let address = json.nexus.address;
-            // console.log("json.nexus.address",address);
-            // address = "0xf0C8A4DBE1C6631580b47c36D60C6A4D8398DdCB";
+            let web3 = new Web3(json.ethEndpoint);
+            let address = json.address;
             const myContract = new web3.eth.Contract(
-                json.nexus.abi,
+                json.abi,
                 address,
                 {
                     from: address, 
                     gas: 15015, 
                     gasPrice: 500000}
               )
-              myContract.events.Command({
+              myContract.events[json.eventName]({
                 fromBlock: 0
               },function(error, result){
                 if (error){                    
@@ -30,13 +28,14 @@ export const web3extensions = {
                 edgeOSKernel.workers[pid].call('callback',[{
                     cb:cb,
                     cbcb:json.onMessage,
-                    result:JSON.parse(result.returnValues.commandJSON)
+                    // pass remove event
+                    result: result
                 }]);                    
             });
+            // send removed
             const cid = edgeOSKernel.extensionObjects.web3.cid++;
             edgeOSKernel.extensionObjects.web3.connections[cid] = web3;
-            return {cid:cid.toString()};
-        
+            return {cid:cid.toString()};        
     },
     "web3_contract_call":{
 

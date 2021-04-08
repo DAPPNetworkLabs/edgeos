@@ -5,7 +5,7 @@ const all = require('it-all')
 
 export const ipfsextensions={
     "ipfs_loadfs":async ({ json, pid, cb, edgeOSKernel})=>{
-            return await edgeOSKernel.loadIpfsToFSJSON(json.ipfshash);
+            return await edgeOSKernel.loadIpfsToFSJSON(json.hash);
         
     },
     "ipfs_savefs":async ({ json, pid, cb, edgeOSKernel})=>{

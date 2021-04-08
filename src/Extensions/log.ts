@@ -3,7 +3,7 @@ export const logextensions = {
         if(pid == 0)
             console.log('kernel:',json.message);
         else
-            console.log(`process-${pid}`,json.message);
+            console.log(`${pid}:`,json.message);
         return {"done":true};   
     },
 }

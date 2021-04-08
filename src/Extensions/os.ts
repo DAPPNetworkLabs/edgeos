@@ -1,23 +1,48 @@
+function delay(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
 export const osextensions = {
     "spawn":async ({json, pid, cb, edgeOSKernel})=>{
-        const res = await edgeOSKernel.wasmWorker(json.wasm,
-            [JSON.stringify(edgeOSKernel.initOpts)]);            
-        edgeOSKernel.processProxies[res.pid] = res.proxy;
+        const owner = json.owner;
+        const newpid= `${owner}:${json.pid}`;
+        if(pid !== "system:1" && pid !== "0"){
+            // only init and kernel can spawn processes for now
+            return {
+                "error":"not allowed"
+            }
+        }
+            
+        const fshash = json.fshash;
+        const command = json.command;
+        const args = json.args;
+        const wasm = json.wasm;
+        const res = await edgeOSKernel.wasmWorker(
+                wasm,
+                newpid,
+                fshash,
+                command,
+                args,
+                owner
+            );
+        
+        // add exit callback -> (for respawn)
+
+        edgeOSKernel.processProxies[newpid] = res.proxy;
         return {
-            pid:res.pid
+            pid:newpid
         };
     
-    },
-
+    },    
     "schedule":async ({json, pid, cb, edgeOSKernel})=>{
             await delay(json.ms);
             return {};
     },
     "ipc_call": async ({json, pid, cb, edgeOSKernel})=>{
         // parse call from abi
-        // get proxy object
+        // get proxy object        
+        // only allow communication between same owner processes
         return {
-            "result":await (edgeOSKernel.processProxies[pid][json.method](json.message))
+            "result":await (edgeOSKernel.processProxies[json.pid][json.method](json.message))
         }
         // run command in remote process
         // return callback

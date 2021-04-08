@@ -12,11 +12,13 @@ export class Bootloader implements IBootloader{
     address: any;
     abi: any;
     topic: any;
-    constructor(ethEndpoint: string, address: any, abi:any,topic) {
+    dspAddress: any;
+    constructor(ethEndpoint: string, address: any, abi:any,topic, dspAddress) {
         this.ethEndpoint = ethEndpoint;
         this.address = address;
         this.abi = abi;
         this.topic = topic;
+        this.dspAddress = dspAddress;
     }
     async ge(){
 
@@ -30,7 +32,7 @@ export class Bootloader implements IBootloader{
         // read from nexus
         let web3 = new Web3(this.ethEndpoint);
         const contract = new web3.eth.Contract(this.abi, this.address)        
-        const manifestJSON = JSON.parse(await contract.methods.manifestJSON().call());
+        const manifestJSON = JSON.parse(await contract.methods.OSManifest().call());
         console.log("Bootloader",manifestJSON)
         const kernelWASM = uint8ArrayConcat(await all(ipfs.cat(manifestJSON.kernelWASM)))
         // const initWASM = uint8ArrayConcat(await all(globalIpfsWrapper.ipfs.cat(manifestJSON.initWASM)))
@@ -39,7 +41,8 @@ export class Bootloader implements IBootloader{
             kernelWASM,
             // fsipfsHash:"",
             initOpts:{
-                wasm:manifestJSON.initWASM,                
+                wasm:manifestJSON.initWASM,
+                dspAddress: this.dspAddress,
                 nexus: {
                     ethEndpoint:this.ethEndpoint,
                     address:this.address,

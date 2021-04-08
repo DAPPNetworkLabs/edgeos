@@ -54,9 +54,7 @@ function cstrLen(pos) {
     }
     return len;
 }
-function delay(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-  }
+
 
 
   
@@ -79,40 +77,48 @@ Object.keys(fulldefs).forEach(k=>{
 })
 
 function callKernelJSFunc(key,oargs,edgeOSKernel){
-    const func = kernelJSFuncs[key];
-    const args = convertArgsToJS(oargs);
-    let ores = func({
-        json:args[0],
-        pid:args[1],
-        cb:args[2],
-        cbcb:args[3],
-        edgeOSKernel});
-    let res = ores;
+    try{
+        const func = kernelJSFuncs[key];
+        const args = convertArgsToJS(oargs);
 
-    res.then(a=>{
+        let ores = func({
+            json:args[0],
+            pid:args[1],
+            cb:args[2],
+            cbcb:args[3],
+            edgeOSKernel});
+        let res = ores;
 
-        const pid = oargs[oargs.length-3];
-        const cb = oargs[oargs.length-2]; 
-        const cbcb = oargs[oargs.length-1]; 
-        // send callback to original thread
-        if(pid === 0){
-            const res2 = JSON.stringify(a);
-            const ptra = encodeString(res2);
-            // console.log("kcb",key,res2.length,cb,cbcb);
-            try{
-                const callbackFn = callback(cb);
-                callbackFn(res2.length,ptra,cbcb);
+        res.then(a=>{
+            const pid = args[1]
+            const cb = oargs[oargs.length-2]; 
+            const cbcb = oargs[oargs.length-1]; 
+            a.request = args[0];
+            // send callback to original thread
+            if(pid == "0"){
+                const res2 = JSON.stringify(a);
+                const ptra = encodeString(res2);
+                // console.log("kcb",key,res2.length,cb,cbcb);
+                try{
+                    const callbackFn = callback(cb);
+                    callbackFn(res2.length,ptra,cbcb);
+                }
+                catch(e){
+                    console.log("e",e)
+                    throw e;
+                }
             }
-            catch(e){
-                console.log("e",e)
-                throw e;
+            else{
+                // console.log("pcb",pid,key,cb,cbcb);
+                edgeOSKernel.workers[pid].call('callback',[{cb,cbcb,result:a}]);
             }
-        }
-        else{
-            // console.log("pcb",pid,key,cb,cbcb);
-            edgeOSKernel.workers[pid].call('callback',[{cb,cbcb,result:a}]);
-        }
-    });
+        });
+    
+    }
+    catch(e){
+        console.log(e);
+        throw e;
+    }
     return true;
 }
 function getKernelImports(edgeOSKernel:EdgeOSKernel){
@@ -132,11 +138,13 @@ function convertArgsToJS(args){
     const realArgs = [];    
     for (let index = 0; index < args.length; index++) {
         // const arg = definition.args[index];        
-        if(index == 0){
+        if(index < 4){
             const len = args[index]
             const pos = args[++index]
-            const str = decodeStr(pos,len);            
-            realArgs.push(JSON.parse(str));
+            let str = decodeStr(pos,len); 
+            if(index == 1)           
+                 str = JSON.parse(str)
+            realArgs.push(str);
         }
         else{
             realArgs.push(args[index]);
@@ -176,7 +184,9 @@ function convertArgsWasm(args,pid){
             realArgs.push(args[index]);
         }
     }
-    realArgs.push(pid);
+    const pidStrPos = encodeString(pid);
+    realArgs.push(pid.length);
+    realArgs.push(pidStrPos);
     realArgs.push(args[args.length-2]);
     realArgs.push(args[args.length-1]);
 
@@ -376,8 +386,7 @@ export class EdgeOSKernel{
         }
         return selected.cid.toString();
     }        
-    wasmWorker(modulebase64, inputArgs) {
-        const pid = ++this.pid;
+    wasmWorker(modulebase64, pid, fshash, command, inputArgs, owner) {
         // Create an object to later interact with 
         const proxy = {};
 
@@ -432,16 +441,16 @@ export class EdgeOSKernel{
             worker.hook("syscall",function({key, args}){
                 
                 // transform args to wasm            
-                const wargs = convertArgsWasm(args,pid);
-                // console.log('got syscall',key, wargs);
-                const method:any = k.instance.exports["edgeos_syscall_"+key];
-                
-                
-                if(!method){
-                    console.error('syscall not found');
-                    throw new Error('syscall not found');
-                }
-                try{            
+
+                try{  
+                    const wargs = convertArgsWasm(args,pid);
+                    const method:any = k.instance.exports["edgeos_syscall_"+key];
+                    
+
+                    if(!method){
+                        console.error('syscall not found:', key);
+                        throw new Error('syscall not found: ' + key);
+                    }          
                     let result = method(...wargs);
                     result = decodeStr(result,cstrLen(result));
                     return result;
@@ -460,11 +469,16 @@ export class EdgeOSKernel{
             worker.on("error", function(error) {
                 reject(error);
             });
-            worker.call('init',[{
-                wasm: Buffer.from(modulebase64,"base64"), // modulePath
-                imports:definitions,                
-                processArgs:inputArgs
-            }]);
+            transformWASM(Buffer.from(modulebase64,"base64")).then(workerBytes=>{
+                worker.call('init',[{
+                    wasm: workerBytes, 
+                    imports:definitions,                
+                    processArgs:inputArgs,
+                    fshash, 
+                    command
+                }]);
+    
+            })
 
         })
         
