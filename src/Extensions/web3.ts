@@ -1,25 +1,20 @@
 const Web3 = require('web3');
 
 export const web3extensions = {
-    "web3_subscribe":async ({json, pid, cb, cbcb,edgeOSKernel})=>{ // type, address, topic,
-            if(!edgeOSKernel.extensionObjects.web3){
-                edgeOSKernel.extensionObjects.web3 = {
-                    connections:{},
-                    cid:0
-                };
-            }
-            let web3 = new Web3(json.ethEndpoint);
-            let address = json.address;
-            const myContract = new web3.eth.Contract(
-                json.abi,
+    "web3_subscribe":async ({json, pid, cb, cbcb,edgeOSKernel})=>{ 
+            const {address, eventName, ethEndpoint,onMessage,abi,fromBlock} = json;
+            let web3 = new Web3(ethEndpoint);
+            const theContract = new web3.eth.Contract(
+                abi,
                 address,
                 {
                     from: address, 
                     gas: 15015, 
                     gasPrice: 500000}
-              )
-              myContract.events[json.eventName]({
-                fromBlock: 0
+              );
+
+              theContract.events[eventName]({
+                fromBlock: fromBlock || 0
               },function(error, result){
                 if (error){                    
                     console.log(error);
@@ -27,23 +22,88 @@ export const web3extensions = {
                 }
                 edgeOSKernel.workers[pid].call('callback',[{
                     cb:cb,
-                    cbcb:json.onMessage,
-                    // pass remove event
-                    result: result
-                }]);                    
+                    cbcb:onMessage,                    
+                    result: result,
+                    request:json
+                }]);
             });
-            // send removed
-            const cid = edgeOSKernel.extensionObjects.web3.cid++;
-            edgeOSKernel.extensionObjects.web3.connections[cid] = web3;
-            return {cid:cid.toString()};        
+            return {};
     },
-    "web3_contract_call":{
+    "web3_contract_call":async ({json, pid, cb, cbcb,edgeOSKernel})=>{ 
+        const {address, args,fn, ethEndpoint,abi,from,gasPrice,gas} = json;
+        let web3 = new Web3(ethEndpoint);
+        const theContract = new web3.eth.Contract(
+            abi,
+            address,
+            {
+                from, 
+                gas, 
+                gasPrice}
+          );
+        return await theContract.methods[fn].call(...args).call({
+            from, 
+            gas, 
+            gasPrice});
+    },
+    "web3_estimate_gas":async ({json, pid, cb, cbcb,edgeOSKernel})=>{ 
+        const {address, args,fn, ethEndpoint,abi,from,gasPrice,gas} = json;
+        let web3 = new Web3(ethEndpoint);
+        const theContract = new web3.eth.Contract(
+            abi,
+            address,
+            {
+                from, 
+                gas, 
+                gasPrice}
+          );
+          return await theContract.methods[fn].call(...args).estimateGas({
+            from, 
+            gas});
+    },
+    "web3_get_last_nonce":async ({json, pid, cb, cbcb,edgeOSKernel})=>{ 
+        const {address, block, ethEndpoint} = json;
+        let web3 = new Web3(ethEndpoint);
+        return await web3.eth.getTransactionCount(address, block || "pending");
 
     },
-    "web3_estimate_gas":{
+    "web3_contract_send":async ({json, pid, cb, cbcb,edgeOSKernel})=>{ 
+        const {address, args,fn, ethEndpoint,abi,from,gasPrice,gas,value} = json;
+        let web3 = new Web3(ethEndpoint);
+        const theContract = new web3.eth.Contract(
+            abi,
+            address,
+            {
+                from, 
+                gas, 
+                gasPrice}
+          );
+          return await theContract.methods[fn].call(...args).send({
+            from, 
+            gas, 
+            gasPrice,value});
     },
-    "web3_get_last_nonce":{
+    "web3_get_proof":async ({json, pid, cb, cbcb,edgeOSKernel})=>{ 
+        const {address, args,fn, ethEndpoint,abi,from,gasPrice,gas,value} = json;
+        let web3 = new Web3(ethEndpoint);
+        ///web3.eth.getProof
     },
-    "web3_contract_send":{
+    "web3_get_uncle":async ({json, pid, cb, cbcb,edgeOSKernel})=>{ 
+        const {address, args,fn, ethEndpoint,abi,from,gasPrice,gas,value} = json;
+        let web3 = new Web3(ethEndpoint);
+        ///web3.eth.getUncle
     },
+    "web3_get_block":async ({json, pid, cb, cbcb,edgeOSKernel})=>{ 
+        const {address, args,fn, ethEndpoint,abi,from,gasPrice,gas,value} = json;
+        let web3 = new Web3(ethEndpoint);
+        ///web3.eth.getBlock
+    },
+    
+    "web3_get_code":async ({json, pid, cb, cbcb,edgeOSKernel})=>{ 
+        const {address, args,fn, ethEndpoint,abi,from,gasPrice,gas,value} = json;
+        let web3 = new Web3(ethEndpoint);
+        ///web3.eth.getCode
+    },
+    
+    // todo: ens
+    
 }

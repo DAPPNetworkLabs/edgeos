@@ -22,7 +22,7 @@ export const ipfsextensions={
         
     },
     "ipfs_write":async ({ json, pid, cb, edgeOSKernel})=>{
-        
+        await globalIpfsWrapper.ipfs.add(json.value,json.options);
     },
 
 }

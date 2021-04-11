@@ -38,15 +38,16 @@ export const osextensions = {
             return {};
     },
     "ipc_call": async ({json, pid, cb, edgeOSKernel})=>{
-        // parse call from abi
-        // get proxy object        
         // only allow communication between same owner processes
         return {
             "result":await (edgeOSKernel.processProxies[json.pid][json.method](json.message))
         }
-        // run command in remote process
-        // return callback
     
+    },
+    "get_pid": async ({json, pid, cb, edgeOSKernel})=>{
+        return {
+            pid
+        }    
     },
     "readfile": async ({pid, method, message},cb, edgeOSKernel)=>{
     },

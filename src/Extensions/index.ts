@@ -7,6 +7,7 @@ import {kmsextensions} from './kms'
 import {leveldbextension} from './leveldb'
 import {osextensions} from './os'
 import {logextensions} from './log'
+import {eosioextensions} from './eosio'
 
 export const extensions={
     ...osextensions,
@@ -16,5 +17,6 @@ export const extensions={
     ...libp2pextensions,
     ...networkextensions,
     ...kmsextensions,
-    ...leveldbextension
+    ...leveldbextension,
+    ...eosioextensions
 }

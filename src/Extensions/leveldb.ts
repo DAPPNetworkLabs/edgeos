@@ -17,50 +17,45 @@ var level = require('level')
 //   })
 
 export const leveldbextension = { // per processid db
-    "leveldb_get":{
-        args:["string"],
-        callbackType: "string",
-        fn:(Str, edgeOSKernel)=>{
-            return "tests syscall::" + Str;
-        }
-    },
-    "leveldb_clear":{
-        args:["string"],
-        callbackType: "string",
-        fn:(Str, edgeOSKernel)=>{
-            return "tests syscall::" + Str;
-        }
-    },
-    "leveldb_import":{
-        args:["string"],
-        callbackType: "string",
-        fn:(Str, edgeOSKernel)=>{
-            return "tests syscall::" + Str;
-        }
-    },
-    "leveldb_export":{
-        args:["string"],
-        callbackType: "string",
-        fn:(Str, edgeOSKernel)=>{
-            return "tests syscall::" + Str;
-        }
-    },
-    "leveldb_create_key_stream":{
-        args:["string"],
-        callbackType: "string",
-        fn:(Str, edgeOSKernel)=>{
-            return "tests syscall::" + Str;
-        }
-    },
-    "leveldb_put":{
-        args:["string"],
-        callbackType: "string",
-        kernelCallback: true,
-        fn:async (tst1, edgeOSKernel)=>{
-            await delay(1000);
-            // do something async
-            return "did async stuff:" + tst1;
-        }
-    },
+    "leveldb_get":async({json, pid, cb, edgeOSKernel})=>{
+        const {key,db} = json;
+        var database = level(`db/${pid}.${db}`);
+        return await database.get(key);
+    },   
+    "leveldb_put":async({json, pid, cb, edgeOSKernel})=>{
+        const {key,db, value} = json;
+        var database = level(`db/${pid}.${db}`);
+        return await database.put(key, value);
+    },   
+    "leveldb_clear":async({json, pid, cb, edgeOSKernel})=>{
+        const {db} = json;
+        var database = level(`db/${pid}.${db}`);
+        return await database.clear();
+    },   
+    "leveldb_create_read_stream":async({json, pid, cb, edgeOSKernel})=>{
+        const {db, options} = json;
+        var database = level(`db/${pid}.${db}`);
+        database.createReadStream(options)
+            .on('data', function (data) {
+                // invoke cb
+                edgeOSKernel.workers[pid].call('callback',[{
+                    cb:cb,
+                    cbcb:json.onValue,
+                    result: data,
+                    request:json
+                }]);
+            })
+            .on('error', function (err) {
+                
+            })
+            .on('close', function () {
+                
+            })
+            .on('end', function () {
+                
+            });
+        
+    },   
+    
 
 }
