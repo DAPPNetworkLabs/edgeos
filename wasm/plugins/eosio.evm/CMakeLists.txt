@@ -46,7 +46,7 @@ set(CMAKE_CXX_FLAGS "$ENV{CXXFLAGS} -D_WASI_EMULATED_SIGNAL -fno-exceptions -Wal
 add_definitions(
     -DNDEBUG
 )
-set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS},--export=__allocate_string")
+set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS},--export=__allocate_string,--export-table")
 
 add_executable(eosio.evm
    ${CMAKE_CURRENT_SOURCE_DIR}/src/eosio.evm.cpp
@@ -83,5 +83,5 @@ target_link_libraries(eosio.evm PRIVATE nlohmann_json::nlohmann_json)
 
 set_target_properties(eosio.evm
    PROPERTIES
-   RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+   RUNTIME_OUTPUT_DIRECTORY "${ROOT_BINARY_DIR}"
 )

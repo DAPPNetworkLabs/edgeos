@@ -164,4 +164,26 @@ describe('EdgeOS initialization tests', () => {
         // }, 2000);
               
     });
+    it('EVM Process', async () => {   
+        const ipfs:any = globalIpfsWrapper.ipfs;
+
+        const testWasm = fs.readFileSync('./wasm/build/eosio.evm.wasm');
+        const hash = (await ipfs.add(testWasm)).cid.toString();
+
+        // setInterval(a=>{
+            const processJson = JSON.stringify({
+                "hash": hash,
+                "fshash": "",
+                "args": ["hello"],
+                "command": ``
+            })
+            deployedContracts.nexus.spawn(
+                dspAccount,
+                processJson, {
+                from: consumerAccount,
+                gas: '5000000'
+            });      
+        // }, 2000);
+              
+    });
 });

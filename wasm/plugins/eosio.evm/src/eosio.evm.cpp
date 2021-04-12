@@ -154,8 +154,8 @@ void evm::call(
 
 int main(int argc, const char **argv){
     // restore snapshot
-    // const char * prm = argv[0];
-    // elog("evm process running: " + std::string(prm));
+    const char * prm = argv[0];
+    elog("evm process running: " + std::string(prm));
 
     // start from known verifiers
     // connect to beacons topic
