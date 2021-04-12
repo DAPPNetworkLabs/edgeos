@@ -137,7 +137,7 @@ namespace eosio_evm
     uint256_t value;           // A scalar value equal to the number of Wei to be transferred to the message call’s recipient or, in the case of contract creation, as an endowment to the newly created account; forma
     std::vector<uint8_t> data; // An unlimited size byte array specifying the input data of the message call
 
-    // std::optional<eosio::checksum160> sender; // Address recovered from 1) signature or 2) EOSIO Account Table (authorized by EOSIO account in case 2)
+    std::optional<eosio::checksum160> sender; // Address recovered from 1) signature or 2) EOSIO Account Table (authorized by EOSIO account in case 2)
     std::optional<Address> to_address;        // Currently set as 256 bit. The 160-bit address of the message call’s recipient or, for a contract creation transaction, ∅, used here to denote the only member of B0 ;
     std::optional<Address> created_address;   // If create transaction, the address that was created
     std::unique_ptr<Account> sender_account;  // Pointer to sender account
@@ -193,7 +193,7 @@ namespace eosio_evm
 
       // RAM Payer
       // eosio::require_auth(ram_payer_account);
-      ram_payer = ram_payer_account;
+      // ram_payer = ram_payer_account;
 
       // Gas
       initialize_base_gas();

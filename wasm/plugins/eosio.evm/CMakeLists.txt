@@ -46,7 +46,7 @@ set(CMAKE_CXX_FLAGS "$ENV{CXXFLAGS} -D_WASI_EMULATED_SIGNAL -fno-exceptions -Wal
 add_definitions(
     -DNDEBUG
 )
-set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS},--export=__allocate_string,--export=edgeos_syscall_spawn,--export=edgeos_syscall_test,--export=edgeos_syscall_log,--export-table,-lwasi-emulated-signal")
+set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS},--export=__allocate_string")
 
 add_executable(eosio.evm
    ${CMAKE_CURRENT_SOURCE_DIR}/src/eosio.evm.cpp
@@ -67,6 +67,7 @@ add_executable(eosio.evm
    ${CMAKE_CURRENT_SOURCE_DIR}/src/precompiles/bncurve.cpp
 )
 target_link_options(eosio.evm INTERFACE -Wl,--allow-undefined,--strip-all)
+target_link_libraries(eosio.evm PRIVATE boost)
 
 target_include_directories(eosio.evm
    PUBLIC
@@ -76,7 +77,9 @@ target_include_directories(eosio.evm
 
 target_compile_definitions(eosio.evm PRIVATE -D_LIBCPP_STRSTREAM -DBOOST_EXCEPTION_DISABLE=1 -D_GLIBCXX_SSTREAM=1 -D_LIBCPP_SSTREAM -DBOOST_NO_IOSTREAM -DBOOST_NO_STRINGSTREAM )
 
-target_link_options(eosio.evm PUBLIC -stack-size 32000 -use-freeing-malloc)
+target_link_options(eosio.evm PUBLIC -use-freeing-malloc)
+
+target_link_libraries(eosio.evm PRIVATE nlohmann_json::nlohmann_json)
 
 set_target_properties(eosio.evm
    PROPERTIES

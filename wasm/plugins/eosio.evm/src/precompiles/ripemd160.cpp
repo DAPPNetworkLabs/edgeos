@@ -13,10 +13,11 @@ namespace eosio_evm
     if (error) return;
 
     // Execute
-    eosio::checksum160 checksum = eosio::ripemd160(
-      const_cast<char*>(reinterpret_cast<const char*>(ctx->input.data())),
-      ctx->input.size()
-    );
+    eosio::checksum160 checksum;
+    // eosio::checksum160 checksum = eosio::ripemd160(
+    //   const_cast<char*>(reinterpret_cast<const char*>(ctx->input.data())),
+    //   ctx->input.size()
+    // );
     auto c_bytes = checksum.extract_as_byte_array();
 
     // Set the result.

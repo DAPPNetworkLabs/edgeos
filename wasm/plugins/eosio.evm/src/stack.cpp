@@ -62,7 +62,7 @@ namespace eosio_evm {
     eosio::print("\n");
 
     for (const auto& elem : st) {
-      eosio::print(intx::hex(elem), "\n");
+      eosio::print(intx::hex(elem) + "\n");
     }
   }
 

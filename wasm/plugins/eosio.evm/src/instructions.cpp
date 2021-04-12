@@ -1271,10 +1271,10 @@ namespace eosio_evm
       if (p_ctx->s.stack_error) return throw_stack();
 
       // Copy results to memory
-      auto bytes_to_copy = std::min(static_cast<unsigned int>(size_out), output.size());
-      if (bytes_to_copy > 0) {
-        std::memcpy(&p_ctx->mem[static_cast<uint64_t>(off_out)], output.data(), bytes_to_copy);
-      }
+      // auto bytes_to_copy = std::min(static_cast<unsigned int>(size_out), output.size());
+      // if (bytes_to_copy > 0) {
+      //   std::memcpy(&p_ctx->mem[static_cast<uint64_t>(off_out)], output.data(), bytes_to_copy);
+      // }
 
       // Charge sub-execution gas
       bool error = use_gas(sub_gas_used);
@@ -1291,10 +1291,10 @@ namespace eosio_evm
 
       // Only copy output to memory if REVERT
       if (ex_.type == ET::revert) {
-        auto bytes_to_copy = std::min(static_cast<unsigned int>(size_out), output.size());
-        if (bytes_to_copy > 0) {
-          std::memcpy(&p_ctx->mem[static_cast<uint64_t>(off_out)], output.data(), bytes_to_copy);
-        }
+        // auto bytes_to_copy = std::min(static_cast<unsigned int>(size_out), output.size());
+        // if (bytes_to_copy > 0) {
+        //   std::memcpy(&p_ctx->mem[static_cast<uint64_t>(off_out)], output.data(), bytes_to_copy);
+        // }
       }
 
       // Reset refunds
@@ -1389,10 +1389,10 @@ namespace eosio_evm
     auto contract_address = ctx->callee.get_address();
 
     // Gas refund if not already scheduled for deletion
-    auto existing = std::find(transaction.selfdestruct_list.begin(), transaction.selfdestruct_list.end(), contract_address);
-    if (existing == transaction.selfdestruct_list.end()) {
-      transaction.gas_refunds += GP_SELFDESTRUCT_REFUND;
-    }
+    // auto existing = std::find(transaction.selfdestruct_list.begin(), transaction.selfdestruct_list.end(), contract_address);
+    // if (existing == transaction.selfdestruct_list.end()) {
+    //   transaction.gas_refunds += GP_SELFDESTRUCT_REFUND;
+    // }
 
     // Check contract balance
     auto balance = ctx->callee.get_balance();
@@ -1406,10 +1406,10 @@ namespace eosio_evm
       // Special case of BURN when sender == recipient
       if (contract_address == recipient_address)
       {
-        auto accounts_byaddress = contract->_accounts.get_index<eosio::name("byaddress")>();
-        accounts_byaddress.modify(accounts_byaddress.iterator_to(ctx->callee), eosio::same_payer, [&](auto& a) {
-          a.balance = 0;
-        });
+        // auto accounts_byaddress = contract->_accounts.get_index<eosio::name("byaddress")>();
+        // accounts_byaddress.modify(accounts_byaddress.iterator_to(ctx->callee), eosio::same_payer, [&](auto& a) {
+        //   a.balance = 0;
+        // });
       }
       // Transfer all balance
       else

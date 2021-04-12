@@ -68,26 +68,26 @@ namespace eosio_evm
     intx::be::unsafe::store(sig.data() + 1 + R_FIXED_LENGTH, s);
 
     // ECC sig
-    eosio::ecc_signature ecc_sig;
-    std::memcpy(ecc_sig.data(), &sig, sizeof(sig));
-    eosio::signature signature = eosio::signature { std::in_place_index<0>, ecc_sig };
+    // eosio::ecc_signature ecc_sig;
+    // std::memcpy(ecc_sig.data(), &sig, sizeof(sig));
+    // eosio::signature signature = eosio::signature { std::in_place_index<0>, ecc_sig };
 
-    // Recover
-    eosio::public_key recovered_variant = eosio::recover_key(hash, signature);
-    eosio::ecc_public_key compressed_public_key = std::get<0>(recovered_variant);
-    std::vector<uint8_t> proper_compressed_key( std::begin(compressed_public_key), std::end(compressed_public_key) );
+    // // Recover
+    // eosio::public_key recovered_variant = eosio::recover_key(hash, signature);
+    // eosio::ecc_public_key compressed_public_key = std::get<0>(recovered_variant);
+    // std::vector<uint8_t> proper_compressed_key( std::begin(compressed_public_key), std::end(compressed_public_key) );
 
-    // Decompress the ETH pubkey
-    uint8_t public_key[65];
-    public_key[0] = MBEDTLS_ASN1_OCTET_STRING; // 04 prefix
-    uECC_decompress(proper_compressed_key.data(), public_key + 1, uECC_secp256k1());
+    // // Decompress the ETH pubkey
+    // uint8_t public_key[65];
+    // public_key[0] = MBEDTLS_ASN1_OCTET_STRING; // 04 prefix
+    // uECC_decompress(proper_compressed_key.data(), public_key + 1, uECC_secp256k1());
 
-    // Hash key to get address
-    std::array<uint8_t, 32u> hashed_key = keccak_256(public_key + 1, 64);
+    // // Hash key to get address
+    // std::array<uint8_t, 32u> hashed_key = keccak_256(public_key + 1, 64);
 
-    // Set the result.
+    // // Set the result.
     std::vector<uint8_t> result(32);
-    std::copy(std::begin(hashed_key) + 12, std::end(hashed_key), std::begin(result) + 12);
+    // std::copy(std::begin(hashed_key) + 12, std::end(hashed_key), std::begin(result) + 12);
 
     // Return
     precompile_return(result);

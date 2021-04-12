@@ -13,10 +13,11 @@ namespace eosio_evm
     if (error) return;
 
     // Execute
-    eosio::checksum256 checksum = eosio::sha256(
-      const_cast<char*>(reinterpret_cast<const char*>(ctx->input.data())),
-      ctx->input.size()
-    );
+    eosio::checksum256 checksum ;
+    // eosio::checksum256 checksum = eosio::sha256(
+    //   const_cast<char*>(reinterpret_cast<const char*>(ctx->input.data())),
+    //   ctx->input.size()
+    // );
     auto result = checksum.extract_as_byte_array();
 
     // Return the result.
