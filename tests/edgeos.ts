@@ -1,15 +1,16 @@
-import { Bootloader } from '../src/Bootloader/NexusBootloader'; // this will be your custom import
+// import { Bootloader } from '../src/Bootloader/NexusBootloader'; // this will be your custom import
 import { expect } from 'chai';
+const proc = require('child_process');
 const Web3 = require('web3');
 const contract = require('truffle-contract');
 const fs = require('fs');
 const path = require('path');
-let ethEndpoint1 = 'ws://127.0.0.1:8545';
+let ethEndpoint1 = 'ws://selfhost:8545';
 import {globalIpfsWrapper} from '../src/IPFSRepo'
-
+const electron = require('electron');
 const web3Evm1 = new Web3(ethEndpoint1);
 // let testAddressEvm1;
-let bootloader:Bootloader;
+// let bootloader:Bootloader;
 let i =0;
 async function deployNexusContracts(manifestJSON:any, masterAccountEvm1) {
     const nexusAbi = JSON.parse(
@@ -70,7 +71,26 @@ async function deployNexusContracts(manifestJSON:any, masterAccountEvm1) {
       token: deployedTokenEvm1
     };
   }
-  
+  function getData(rawData) {
+    let lastIdx = 0;
+    let data = [];
+    while (true) {
+      let tsIdx = rawData.indexOf("data: ", lastIdx);
+      if (tsIdx == -1) break;
+      let openIdx = rawData.indexOf("{", tsIdx);
+      let parentheses = ["{"];
+      let curIdx = openIdx + 1;
+      while (parentheses.length) {
+        const cur = rawData.charAt(curIdx);
+        if (cur == "}") parentheses.pop();
+        if (cur == "{") parentheses.push("{");
+        curIdx++;
+      }
+      lastIdx = curIdx;
+      data.push(rawData.substring(tsIdx, curIdx));
+    }
+    return data.join('\n') + '\n';
+  }
 describe('EdgeOS initialization tests', () => {     
     let deployedContracts;
     let masterAccountEvm1;
@@ -105,20 +125,50 @@ describe('EdgeOS initialization tests', () => {
         //     from: dspAccount,
         //     gas: '5000000'
         // });
-        bootloader = new Bootloader(
-            ethEndpoint1,            
-            deployedContracts.nexus.address, 
-            deployedContracts.nexus.abi,
-            deployedContracts.nexus.address,
-            dspAccount
-        );
         
-        await bootloader.boot();
+        
+        const elecPath = path.resolve(__dirname, '../electron/dist/main.bundle.js');
+        // const ipfsHash = fs.readFileSync(path.resolve(__dirname, '../dsp-libs/packages/apps/electron/.env'), 'utf-8').trim().split("=")[1];
+        const queryString = `?ethEndpoint1=${ethEndpoint1}&nexusAddress=${deployedContracts.nexus.address}&dspAccount=${dspAccount}`;
+        // bootloader = new Bootloader(
+        //     ethEndpoint1,            
+        //     deployedContracts.nexus.address, 
+        //     deployedContracts.nexus.abi,
+        //     deployedContracts.nexus.address,
+        //     dspAccount
+        // );
+        console.log("electron=",elecPath);
+        const child1 = proc.spawn(electron, [elecPath, '--no-sandbox'], { env: {
+             ...process.env, 
+             QUERY: queryString } });
+        child1.stdout.on('data', (rawData) => {
+        let data = rawData.toString('utf-8');
+          console.log(data.trim());
+          fs.appendFileSync('edgedsp1.log', rawData);
+        });
+        child1.stderr.on('data', (rawData) => {
+            let data = rawData.toString('utf-8');
+            console.log(data.trim());
+            fs.appendFileSync('edgedsp1.log', rawData);
+          });
+        child1.on('error', (error) => {
+          const msg = `process errored with msg ${error}\n`;
+          console.log(msg);
+          fs.appendFileSync('edgedsp1.log', msg);
+        });
+        child1.on('exit', (code) => {
+          const msg = `process exited with code ${code}\n`;
+          console.log(msg);
+          fs.appendFileSync('edgedsp1.log', msg);
+        });
+        
+        console.log(``);
+        // await bootloader.boot();
     }),
     it('Kernel ready', async () => {   
         
 
-        expect(await bootloader.kernel.wasmFs.getStdOut()).to.eq("Hello World!");
+        // expect(await bootloader.kernel.wasmFs.getStdOut()).to.eq("Hello World!");
     });
     it('Blockchain', async () => {   
         const ipfs:any = globalIpfsWrapper.ipfs;

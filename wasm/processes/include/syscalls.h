@@ -8,7 +8,7 @@ using json = nlohmann::json;
 #define ARSG int jsonLen, const char *json, void cb(int jsonResLen, const char * jsonRes,int cbcb), int cb2
 typedef void (*cbfunc_t)(int jsonResLen, const char * jsonRes,int cb);
 typedef void (*cbfunc_j_t)(json * jsonRes);
-cbfunc_t cbfunc =
+__attribute__ ((visibility ("hidden"))) cbfunc_t cbfunc =
     [](int jsonResLen, const char * jsonRes, int cb){ 
             json result = (json)json::parse(jsonRes); 
             auto ax = (cbfunc_j_t)cb;
@@ -21,7 +21,7 @@ int _edgeos_##name(ARSG) __attribute__(( \
     __import_module__("edgeos"), \
     __import_name__(STR(name)) \
 )); \
-int edgeos_##name(json *a,void callback(json * message)) {\
+inline int edgeos_##name(json *a,void callback(json * message)) {\
     auto jsonParams = a->dump(); \
     return _edgeos_##name( \
         jsonParams.size(), \
@@ -42,7 +42,7 @@ EDGEOS_SYSCALL(writefile)
 EDGEOS_SYSCALL(web3_subscribe)
 EDGEOS_SYSCALL(inter_process_call)
 EDGEOS_SYSCALL(log)
-void elog(std::string str){
+inline void elog(std::string str){
    json j2 = {
         {"message", str},
    };

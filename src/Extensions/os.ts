@@ -16,13 +16,23 @@ export const osextensions = {
         const command = json.command;
         const args = json.args;
         const wasm = json.wasm;
+        
         const res = await edgeOSKernel.wasmWorker(
                 wasm,
                 newpid,
                 fshash,
                 command,
                 args,
-                owner
+                (code)=>{
+                    if(json.onDestroy){
+                        edgeOSKernel.workers[pid].call('callback',[{
+                            cb:cb,
+                            cbcb:json.onDestroy,
+                            result: {code, request:json},
+                            request:json
+                        }]);
+                    }
+                }
             );
         
         // add exit callback -> (for respawn)

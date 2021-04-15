@@ -42,6 +42,16 @@ void spawnProcess(spawn_event_t event){
         auto res = (*result);
         auto request= res["request"];
         auto wasm = res["bytes"].get<std::string>();
+        cbfunc_j_t onDestroy = [](json * destoryResult){
+            auto res2 = (*destoryResult);
+            elog("consumer process restarting:" + res2["pid"].get<std::string>());
+            edgeos_spawn(&res2["request"], [](json * spawn_result){
+                auto res3 = (*spawn_result);
+                auto pid = res3["pid"].get<std::string>();
+                elog("consumer process restarted:" + pid);
+            });            
+        };
+         
         json p2 = {
             {"wasm", wasm},
             {"owner",request["owner"]},
@@ -49,8 +59,9 @@ void spawnProcess(spawn_event_t event){
             {"fshash",request["fshash"]},
             {"command",request["command"]},
             {"args",request["args"]},
-            {"pid", request["pid"]}
+            {"pid", request["pid"]},            
         };
+        p2["onDestroy"] =  (int)onDestroy;
          edgeos_spawn(&p2, [](json * spawn_result){
             auto res2 = (*spawn_result);
             auto pid = res2["pid"].get<std::string>();

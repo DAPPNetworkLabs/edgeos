@@ -2,7 +2,6 @@ import { EdgeOSKernel } from '../EdgeOSWASMKernel'; // this will be your custom 
 import {IBootloader} from './IBootloader'
 import {globalIpfsWrapper} from '../IPFSRepo'
 const Web3 = require('web3');
-const fs = require('fs');
 const uint8ArrayConcat = require('uint8arrays/concat')
 const all = require('it-all')
 
@@ -19,9 +18,6 @@ export class Bootloader implements IBootloader{
         this.abi = abi;
         this.topic = topic;
         this.dspAddress = dspAddress;
-    }
-    async ge(){
-
     }
     async boot(){
         await globalIpfsWrapper.ready();       

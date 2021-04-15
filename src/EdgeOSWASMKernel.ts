@@ -25,16 +25,16 @@ import { WASI } from "@wasmer/wasi"
 import { WasmFs } from "@wasmer/wasmfs"
 import { lowerI64Imports } from "@wasmer/wasm-transformer";
 const threads = require('bthreads');
-import { TextDecoder,TextEncoder } from 'util'
+// import { TextDecoder,TextEncoder } from 'util'
 let ginstance;
 import { extensions } from './Extensions'
 let bindings = null;
-if (typeof window === 'undefined'){
-    bindings = require("@wasmer/wasi/lib/bindings/node").default;
-}
-else{
+// if (typeof window === 'undefined'){
+//     bindings = require("@wasmer/wasi/lib/bindings/node").default;
+// }
+// else{
     bindings = require("@wasmer/wasi/lib/bindings/browser").default;
-}
+// }
 function callback(f) {
     return ginstance.exports.__indirect_function_table.get(f);
 }
@@ -386,7 +386,7 @@ export class EdgeOSKernel{
         }
         return selected.cid.toString();
     }        
-    wasmWorker(modulebase64, pid, fshash, command, inputArgs, owner) {
+    wasmWorker(modulebase64, pid, fshash, command, inputArgs, onDestroy) {
         // Create an object to later interact with 
         const proxy = {};
 
@@ -433,7 +433,9 @@ export class EdgeOSKernel{
             });
             worker.bind('exit', function(code) {
                 worker.close();
-                console.log('process exited');
+                console.log('process exited', pid, code );
+                if(onDestroy)
+                    onDestroy(code);
             });
 
             // worker.on('message', console.log);

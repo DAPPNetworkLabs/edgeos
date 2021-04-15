@@ -24,8 +24,8 @@ nodeos -e -p eosio \
 
 echo "Restart ganache1"
 kill -9 $(lsof -t -i:8545)
-ganache-cli -p 8545 -b 1 -m 'either ostrich protect jump kingdom flat neck cabin sock they vast merit' >> ganache1.log 2>&1 &
+ganache-cli -h selfhost -p 8545 -b 1 -m 'either ostrich protect jump kingdom flat neck cabin sock they vast merit' >> ganache1.log 2>&1 &
 
 echo "Restart ganache2"
 kill -9 $(lsof -t -i:9545)
-ganache-cli -p 9545 -b 1 -m 'either ostrich protect jump kingdom flat neck cabin sock they vast merit' >> ganache2.log 2>&1 &
+ganache-cli -h selfhost -p 9545 -b 1 -m 'either ostrich protect jump kingdom flat neck cabin sock they vast merit' >> ganache2.log 2>&1 &

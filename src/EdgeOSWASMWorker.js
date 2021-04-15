@@ -1,17 +1,17 @@
 const threads = require('bthreads');
-const {TextEncoder,TextDecoder} = require('util');
+// const {TextEncoder,TextDecoder} = require('util');
 const { WasmFs } = require('@wasmer/wasmfs');
 const { WASI } = require('@wasmer/wasi');
 let bindings = null;
 
 
 
-if (typeof window === 'undefined'){
-    bindings = require("@wasmer/wasi/lib/bindings/node").default;
-}
-else{
+// if (typeof window === 'undefined'){
+//     bindings = require("@wasmer/wasi/lib/bindings/node").default;
+// }
+// else{
     bindings = require("@wasmer/wasi/lib/bindings/browser").default;
-}
+// }
 if (!WebAssembly.instantiateStreaming) {
     WebAssembly.instantiateStreaming = async (resp, importObject) => {
             const source = await (await resp).arrayBuffer();
@@ -181,7 +181,7 @@ parent.hook('init', async function({wasm,imports,processArgs,fshash,command}) {
                 exit: (code) =>{     
                     console.log('exit');
                     parent.fire('exit',[code]);
-                    // throw new Error('exit:' + code);
+                    throw new Error('exit:' + code);
                 },
             }
             });
