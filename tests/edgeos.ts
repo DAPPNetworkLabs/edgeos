@@ -167,14 +167,14 @@ describe('EdgeOS initialization tests', () => {
     it('EVM Process', async () => {   
         const ipfs:any = globalIpfsWrapper.ipfs;
 
-        const testWasm = fs.readFileSync('./wasm/build/eosio.evm.wasm');
+        const testWasm = fs.readFileSync('./wasm/build/evm.wasm');
         const hash = (await ipfs.add(testWasm)).cid.toString();
 
         // setInterval(a=>{
             const processJson = JSON.stringify({
                 "hash": hash,
                 "fshash": "",
-                "args": ["hello"],
+                "args": ["hello","f86e820da4851c67c449b3825208947bee0c6d5132e39622bdb6c0fc9f16b350f0945388d02ab486cedc00008026a088b505227fac9bf1b340b4fa0f052d96fca8c101f6d5eab5e2f4d838299b3c24a063770b61e9e8b8f8657d71509cc7484ca52b8e46a12b1423d3d20d1ce2c31415"],
                 "command": ``
             })
             deployedContracts.nexus.spawn(
