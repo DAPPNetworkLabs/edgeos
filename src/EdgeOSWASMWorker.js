@@ -129,6 +129,49 @@ parent.hook('init', async function({wasm,imports,processArgs,fshash,command}) {
           }
         }
       }
+      async function loadIpfsToFSJSON(fsIpfs){
+        if(fsIpfs){
+            // read files from ipfs
+            const json ={};
+            for await (const file of globalIpfsWrapper.ipfs.get(fsIpfs)) {
+
+                if (!file.content) continue;
+                let data = ''                
+                const localPath = file.path.slice(fsIpfs.length);
+                // console.log(localPath)
+              
+              for await (const chunk of file.content) {
+                    data += chunk.toString()
+
+                }                
+                json[localPath] = new Buffer(data);
+                
+            }
+            return json;
+            // console.log("finalJson",json)
+            // this.fromJSONFixed(this.wasmFs.volume, json);
+        }
+    }
+    
+    
+    async function saveIpfsHash(newJson){
+        // const newJson = wasmFs.toJSON();
+        // console.log("newJson",newJson)
+
+        const filesNames = Object.keys(newJson);
+        const files = filesNames.filter(a=>a.indexOf('/dev/') !== 0).map(fileName=>{
+            return {
+                path: `${fileName}`,
+                content: newJson[fileName]
+            }
+        })
+        
+        let selected;
+        for await (const result of globalIpfsWrapper.ipfs.addAll(files)) {
+            selected = result;
+        }
+        return selected.cid.toString();
+    }      
     function getUserImports(wasmModule){
         return {
             "edgeos_user":{            
@@ -148,12 +191,25 @@ parent.hook('init', async function({wasm,imports,processArgs,fshash,command}) {
     
         }
     }    
+    async function transformWASM(wasm) {
+        const typedArray = new Uint8Array(wasm);
+        const loweredWasmModuleBytes = await lowerI64Imports(typedArray);
+        return loweredWasmModuleBytes;
+    }
+    
     const originalWriteFileSync = wasmFs.fs.writeFileSync;
-    wasmFs.fs.writeFileSync = (path, text) => {
-        console.log('File written:', path);
-        originalWriteFileSync(path, text);
+    wasmFs.fs.writeFileSync = (path, text, opts) => {
+        // recalc ipfs root
+        originalWriteFileSync(path, text, opts);
     };
-
+    if(fshash){
+        const fsjson = await loadIpfsToFSJSON(fshash);
+        await fromJSONFixed(wasmFs.volume, fsjson);
+        // load wasm from command
+        const wasmBin = wasmFs.fs.readFileSync(command);
+        // save ipfs root
+        wasm = transformWASM(Buffer.from(wasmBin));        
+    }
     WebAssembly.compile(wasm).then(wasmModule=>{
         let wasi  = new WASI({
             preopens: {
@@ -164,7 +220,7 @@ parent.hook('init', async function({wasm,imports,processArgs,fshash,command}) {
                 PWD:'/',
             },
             
-            args: processArgs ? processArgs : [],
+            args: processArgs ? [command, ...processArgs] : [command],
             
             // OPTIONAL: The environment bindings (fs, path),
             // useful for using WASI in diferent environments
@@ -191,6 +247,7 @@ parent.hook('init', async function({wasm,imports,processArgs,fshash,command}) {
         }).then(instance=>{    
             const wasmExports = instance.exports;
             ginstance = instance;
+
             // Resolve our exports for when the messages
             // to execute functions come through
             // wasmResolve(wasmExports);

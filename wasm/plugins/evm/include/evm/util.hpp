@@ -10,6 +10,9 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <limits.h>
+#include <sstream>
+#include <vector>
+#include <iomanip>
 
 namespace wasm_evm
 {
@@ -27,44 +30,30 @@ namespace wasm_evm
 
     return res;
   }
-  static inline int hex_value(unsigned char hex_digit)
-  {
-      static const signed char hex_values[256] = {
-          -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-          -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-          -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-          0,  1,  2,  3,  4,  5,  6,  7,  8,  9, -1, -1, -1, -1, -1, -1,
-          -1, 10, 11, 12, 13, 14, 15, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-          -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-          -1, 10, 11, 12, 13, 14, 15, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-          -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-          -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-          -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-          -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-          -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-          -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-          -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-          -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-          -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-      };
-      int value = hex_values[hex_digit];
-      check (value == -1,"invalid hex digit");
-      return value;
-  }
-  static inline std::vector<uint8_t>& hex2bin(const std::string& hex)
+static inline int char2int(char input)
 {
-    const auto len = hex.length();
-    check (len & 1,"odd length");
+  if(input >= '0' && input <= '9')
+    return input - '0';
+  if(input >= 'A' && input <= 'F')
+    return input - 'A' + 10;
+  if(input >= 'a' && input <= 'f')
+    return input - 'a' + 10;
+  check(false, "invalid hex string");
+}
 
-    std::vector<uint8_t> output;
-    output.reserve(len / 2);
-    for (auto it = hex.begin(); it != hex.end(); )
-    {
-        int hi = hex_value(*it++);
-        int lo = hex_value(*it++);
-        output.push_back(hi << 4 | lo);
-    }
-    return output;
+// This function assumes src to be a zero terminated sanitized string with
+// an even number of [0-9a-f] characters, and target to be sufficiently large
+static inline std::vector<uint8_t> hex2bin(std::string st)
+{
+  const char* src  = st.c_str();
+  std::vector<uint8_t> output;
+  output.reserve(st.size() / 2);
+  while(*src && src[1])
+  {
+    output.push_back(char2int(*src)*16 + char2int(src[1]));
+    src += 2;
+  }
+  return output;
 }
   static inline void mkdirRecursive(std::string path, mode_t mode) {
     const char *dir = path.c_str();

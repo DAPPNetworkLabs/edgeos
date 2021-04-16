@@ -223,9 +223,9 @@ export class EdgeOSKernel{
         const wasmFs = new WasmFs();
         this.wasmFs = wasmFs;  
         const originalWriteFileSync = wasmFs.fs.writeFileSync;
-        wasmFs.fs.writeFileSync = (path, text) => {
+        wasmFs.fs.writeFileSync = (path, text,opts) => {
             console.log('File written:', path);
-            originalWriteFileSync(path, text);
+            originalWriteFileSync(path, text,opts);
         };
         try{
             this.wasmFs.fs.mkdirSync('/s');

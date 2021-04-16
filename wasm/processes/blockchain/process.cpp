@@ -105,7 +105,7 @@ void start(){
 }
 int main(int argc, const char **argv){
     // restore snapshot
-    const char * prm = argv[0];
+    const char * prm = argv[1];
     elog("chain process running: " + std::string(prm));
 
     // start from known verifiers

@@ -43,13 +43,21 @@ void spawnProcess(spawn_event_t event){
         auto request= res["request"];
         auto wasm = res["bytes"].get<std::string>();
         cbfunc_j_t onDestroy = [](json * destoryResult){
-            auto res2 = (*destoryResult);
-            elog("consumer process restarting:" + res2["pid"].get<std::string>());
-            edgeos_spawn(&res2["request"], [](json * spawn_result){
-                auto res3 = (*spawn_result);
-                auto pid = res3["pid"].get<std::string>();
-                elog("consumer process restarted:" + pid);
-            });            
+            auto res2 = (*destoryResult);            
+            elog("consumer process restarting:" + res2["request"]["pid"].get<std::string>());
+            auto psched = ((json){
+                {"ms", 10000},
+                {"payload", res2["request"]},
+            });
+            edgeos_schedule(&psched, [](json * sched_result){
+                auto res4 = *sched_result;
+                edgeos_spawn(&res4["request"]["payload"], [](json * spawn_result){
+                    auto res3 = (*spawn_result);
+                    auto pid = res3["pid"].get<std::string>();
+                    elog("consumer process restarted:" + pid);
+                });            
+                
+            });
         };
          
         json p2 = {
@@ -107,7 +115,7 @@ int main(int argc, const char **argv){
     // char c[35];        
     // sprintf(c,"hello from process");
 
-    auto init_opts = json::parse(argv[0]);
+    auto init_opts = json::parse(argv[1]);
     myDSP = new std::string(init_opts["dspAddress"].get<std::string>());
     elog("init process running: " + *myDSP);
 

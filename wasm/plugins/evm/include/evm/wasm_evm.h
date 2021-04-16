@@ -7,7 +7,7 @@ namespace wasm_evm {
   
    /// @cond IMPLEMENTATIONS
   static inline void check(bool condition, std::string str){
-      if(condition){
+      if(!condition){
           elog("assert error:" +str);
           exit(1);
       }

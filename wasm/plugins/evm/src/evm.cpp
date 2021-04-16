@@ -154,18 +154,24 @@ void evm::call(
 wasm_evm::evm * evm;
 int main(int argc, const char **argv){
     // restore snapshot
-    const char * prm0 = argv[0];
-    const char * prm1 = argv[1];
-    const char * prm2 = argv[2];    
+    const char * prm0 = argv[1];
+    const char * prm1 = argv[2];
+    const char * prm2 = argv[3];    
     evm = new wasm_evm::evm();
     wasm_evm::checksum160 sender;
     
     elog("evm process running: " + std::string(prm0));
+    std::string ps = std::string(prm1);
+    // elog("ps size: " + std::to_string(ps.size()));
+    std::vector<uint8_t> trx = wasm_evm::hex2bin(ps);
+    // elog("trx size: " + std::to_string(trx.size()));
+
+    const std::vector<int8_t>& trxv = std::vector<signed char>(trx.begin(),trx.end());
+    // elog("trxv size: " + std::to_string(trxv.size()));
     
-    auto trx = wasm_evm::hex2bin(std::string(prm1));
-    auto transaction = wasm_evm::EthereumTransaction(std::vector<signed char>(trx.begin(),trx.end()));
-    auto s = checksum160ToAddress(transaction.get_sender());
-    //elog("trx sender: 0x" + intx::to_string(s,16));
+    auto transaction = wasm_evm::EthereumTransaction(trxv);
+    auto s = wasm_evm::bin2hex(transaction.to);
+    elog("trx to: 0x" + s);    
     // evm->raw(, std::nullopt);
 
     return 0;

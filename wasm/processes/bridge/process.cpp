@@ -103,8 +103,8 @@ void Bridge::start(){
 
 int main(int argc, const char **argv){
     // read nonce from state
-    const char * from = argv[0];
-    const char * to = argv[1];
+    const char * from = argv[1];
+    const char * to = argv[2];
     bridge_singleton = new Bridge(from,to);
     bridge_singleton->push_transactions();
     elog("bridge process running: " + std::string(from) + " " + std::string(to));

@@ -5,7 +5,7 @@ export const osextensions = {
     "spawn":async ({json, pid, cb, edgeOSKernel})=>{
         const owner = json.owner;
         const newpid= `${owner}:${json.pid}`;
-        if(pid !== "system:1" && pid !== "0"){
+        if(pid.split(':')[0] !== "system" && pid !== "0"){
             // only init and kernel can spawn processes for now
             return {
                 "error":"not allowed"
@@ -23,7 +23,7 @@ export const osextensions = {
                 fshash,
                 command,
                 args,
-                (code)=>{
+                (code)=>{                    
                     if(json.onDestroy){
                         edgeOSKernel.workers[pid].call('callback',[{
                             cb:cb,

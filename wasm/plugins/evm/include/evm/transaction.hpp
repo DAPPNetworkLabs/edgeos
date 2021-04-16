@@ -258,7 +258,7 @@ namespace wasm_evm
     std::unique_ptr<Account> sender_account;  // Pointer to sender account
     std::vector<Address> selfdestruct_list;   // SELFDESTRUCT List
     LogHandler logs = {};                     // Log handler for transaction
-    // wasm_evm::checksum256 hash = {};             // Hash of transaction
+    wasm_evm::checksum256 hash = {};             // Hash of transaction
     std::vector<std::string> errors;          // Keeps track of errors
 
     uint256_t gas_used;     // Gas used in transaction
@@ -301,10 +301,10 @@ namespace wasm_evm
       }
 
       // Validate Value
-      // wasm_evm::check(value >= 0, "Invalid Transaction: Value cannot be negative.");
+      wasm_evm::check(value >= 0, "Invalid Transaction: Value cannot be negative.");
 
       // Hash
-      // hash = keccak_256(encode());
+      hash = keccak_256(encode());
 
       // RAM Payer
       // wasm_evm::require_auth(ram_payer_account);
@@ -343,7 +343,7 @@ namespace wasm_evm
       sig[0] = recovery_id + 27 + 4; // + 4 as it is compressed
 
       // R and S valdiation
-      // wasm_evm::check(s >= 1 && s <= intx::from_string<uint256_t>("0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5D576E7357A4501DDFE92F46681B20A0"), "Invalid Transaction: s value in signature must be between 1 and 0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5D576E7357A4501DDFE92F46681B20A0, inclusive.");
+      wasm_evm::check(s >= 1 && s <= intx::from_string<uint256_t>("0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5D576E7357A4501DDFE92F46681B20A0"), "Invalid Transaction: s value in signature must be between 1 and 0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5D576E7357A4501DDFE92F46681B20A0, inclusive.");
 
       // R and S
       intx::be::unsafe::store(sig.data() + 1, r);
