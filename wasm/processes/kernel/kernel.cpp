@@ -15,35 +15,21 @@
 #include "syscalls/syscalls.c"
 
 void spawnInitProcess(json init_opts){  
-    auto ipfshash = init_opts["wasm"].get<std::string>();
-    elog("init process loading from:" + ipfshash);
-    json p = {
-        {"hash", ipfshash},
-        {"initOpts",init_opts}
-    };
-    
+    auto manifest = init_opts["manifest"];
+    elog("init process loading");
 
-    edgeos_ipfs_read(&p, [](json * result){
-        // json result = (json)json::parse(jsonRes);
-        // auto res = (result);
-        auto res = (*result);
-        auto wasm = res["bytes"].get<std::string>();        
-        std::string opts = res["request"]["initOpts"].dump();
-        elog("loaded process from ipfs: " + std::to_string(wasm.size()));
         json p2 = {
-            {"wasm", wasm},
             {"pid", 1},
-            {"fshash",""},
+            {"fshash",manifest["initWASM"].get<std::string>()},
             {"owner","system"},
             {"command",""},
-            {"args", {opts}},
+            {"args", {init_opts.dump()}},
         };        
          edgeos_spawn(&p2, [](json * spawn_result){
             auto res2 = (*spawn_result);
             auto pid = res2["pid"].get<std::string>();
             elog("init process loaded:" + pid);
         });
-    });
     
 }
 
@@ -54,6 +40,5 @@ int main(int argc, const char **argv){
 
     spawnInitProcess(init_opts);
     
-    // todo: init kernel modules    
     return 0;
 }

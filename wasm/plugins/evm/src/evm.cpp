@@ -168,10 +168,10 @@ int main(int argc, const char **argv){
 
     const std::vector<int8_t>& trxv = std::vector<signed char>(trx.begin(),trx.end());
     // elog("trxv size: " + std::to_string(trxv.size()));
-    
-    auto transaction = wasm_evm::EthereumTransaction(trxv);
-    auto s = wasm_evm::bin2hex(transaction.to);
-    elog("trx to: 0x" + s);    
+    evm->raw(trxv, std::nullopt);
+    // auto transaction = wasm_evm::EthereumTransaction(trxv);
+    // auto s = wasm_evm::bin2hex(transaction.to);
+    // elog("trx to: 0x" + s);    
     // evm->raw(, std::nullopt);
 
     return 0;

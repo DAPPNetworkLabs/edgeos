@@ -12,23 +12,20 @@ export const osextensions = {
             }
         }
             
-        const fshash = json.fshash;
-        const command = json.command;
-        const args = json.args;
+        // const fshash = json.fshash;
+        // const command = json.command;
+        // const args = json.args;
         const wasm = json.wasm;
-        
         const res = await edgeOSKernel.wasmWorker(
                 wasm,
                 newpid,
-                fshash,
-                command,
-                args,
-                (code)=>{                    
+                json,
+                (code,stdout, stderr)=>{                    
                     if(json.onDestroy){
                         edgeOSKernel.workers[pid].call('callback',[{
                             cb:cb,
                             cbcb:json.onDestroy,
-                            result: {code, request:json},
+                            result: {code, request:json,stdout,stderr},
                             request:json
                         }]);
                     }
@@ -50,7 +47,7 @@ export const osextensions = {
     "ipc_call": async ({json, pid, cb, edgeOSKernel})=>{
         // only allow communication between same owner processes
         return {
-            "result":await (edgeOSKernel.processProxies[json.pid][json.method](json.message))
+            ...(await (edgeOSKernel.processProxies[json.pid][json.method](json.message)))
         }
     
     },
@@ -58,9 +55,5 @@ export const osextensions = {
         return {
             pid
         }    
-    },
-    "readfile": async ({pid, method, message},cb, edgeOSKernel)=>{
-    },
-    "writefile": async ({pid, method, message},cb, edgeOSKernel)=>{
-    },
+    }
 }

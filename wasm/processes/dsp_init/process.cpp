@@ -28,22 +28,25 @@ void spawnProcess(spawn_event_t event){
         elog("discarded invalid json");
         return;
     }
-    json p = {
-        {"hash", evJSON["hash"]},
-        {"command", evJSON["command"]},
-        {"owner", event.consumer},
-        {"fshash", evJSON["fshash"]},
-        {"args", evJSON["args"]},
-        {"pid", event.pid}
-    };
-    edgeos_ipfs_read(&p, [](json * result){
+    evJSON["owner"] = event.consumer;
+    evJSON["pid"] = event.pid;
+    // edgeos_ipfs_read(&evJSON, [](json * result){
         // json result = (json)json::parse(jsonRes);
         // auto res = (result);
-        auto res = (*result);
-        auto request= res["request"];
-        auto wasm = res["bytes"].get<std::string>();
+        // auto res = (*result);
+        auto request= evJSON;
+        // auto wasm = res["bytes"].get<std::string>();
         cbfunc_j_t onDestroy = [](json * destoryResult){
             auto res2 = (*destoryResult);            
+            auto code = res2["code"].get<int>();
+            // auto stderr = res2["stderr"].get<std::string>();
+            // auto stdout = res2["stdout"].get<std::string>();
+
+            auto restart = res2["request"]["restart"].get<std::string>();
+            if (restart == "onerror" && code == 0)
+                return;
+            else if (restart == "never") 
+                return;
             elog("consumer process restarting:" + res2["request"]["pid"].get<std::string>());
             auto psched = ((json){
                 {"ms", 10000},
@@ -58,24 +61,15 @@ void spawnProcess(spawn_event_t event){
                 });            
                 
             });
-        };
-         
-        json p2 = {
-            {"wasm", wasm},
-            {"owner",request["owner"]},
-            {"pid",request["pid"]},
-            {"fshash",request["fshash"]},
-            {"command",request["command"]},
-            {"args",request["args"]},
-            {"pid", request["pid"]},            
-        };
-        p2["onDestroy"] =  (int)onDestroy;
-         edgeos_spawn(&p2, [](json * spawn_result){
+        };        
+        request["onDestroy"] =  (int)onDestroy;
+        //request["wasm"] =  wasm;
+         edgeos_spawn(&request, [](json * spawn_result){
             auto res2 = (*spawn_result);
             auto pid = res2["pid"].get<std::string>();
             elog("consumer process loaded:" + pid);
         });
-    });
+    // });
 
 }
 class SpawnEventFinalityManager: public EventFinalityManager<spawn_event_t>{
@@ -114,10 +108,11 @@ int main(int argc, const char **argv){
     // std::cout << "Hello World!";
     // char c[35];        
     // sprintf(c,"hello from process");
+    elog("init process running" );
 
     auto init_opts = json::parse(argv[1]);
     myDSP = new std::string(init_opts["dspAddress"].get<std::string>());
-    elog("init process running: " + *myDSP);
+    elog("listening for: " + *myDSP);
 
     // get latest procs
     // get events since latest procs

@@ -4,13 +4,13 @@ import WebRTCStar from 'libp2p-webrtc-star'
 import { NOISE } from 'libp2p-noise'
 import Mplex from 'libp2p-mplex'
 import Bootstrap from 'libp2p-bootstrap'
-const multiaddr = require('multiaddr')
+// const multiaddr = require('multiaddr')
 const PeerId = require('peer-id')
 var toString = require('stream-to-string');
 const KadDHT = require('libp2p-kad-dht')
-const pipe = require('it-pipe')
-const uint8ArrayConcat = require('uint8arrays/concat')
-const uint8ArrayToString = require('uint8arrays/to-string')
+// const pipe = require('it-pipe')
+// const uint8ArrayConcat = require('uint8arrays/concat')
+// const uint8ArrayToString = require('uint8arrays/to-string')
 
 import Gossipsub from 'libp2p-gossipsub'
 import {globalIpfsWrapper} from './IPFSRepo';
@@ -25,16 +25,9 @@ import { WASI } from "@wasmer/wasi"
 import { WasmFs } from "@wasmer/wasmfs"
 import { lowerI64Imports } from "@wasmer/wasm-transformer";
 const threads = require('bthreads');
-// import { TextDecoder,TextEncoder } from 'util'
 let ginstance;
 import { extensions } from './Extensions'
-let bindings = null;
-// if (typeof window === 'undefined'){
-//     bindings = require("@wasmer/wasi/lib/bindings/node").default;
-// }
-// else{
-    bindings = require("@wasmer/wasi/lib/bindings/browser").default;
-// }
+const bindings = require("@wasmer/wasi/lib/bindings/browser").default;
 function callback(f) {
     return ginstance.exports.__indirect_function_table.get(f);
 }
@@ -56,7 +49,9 @@ function cstrLen(pos) {
 }
 
 
-
+function dlog(...args){
+    console.log("debug",...args);
+}
   
 const fulldefs = {   
     // IPC
@@ -80,7 +75,7 @@ function callKernelJSFunc(key,oargs,edgeOSKernel){
     try{
         const func = kernelJSFuncs[key];
         const args = convertArgsToJS(oargs);
-
+        dlog("calling", key);
         let ores = func({
             json:args[0],
             pid:args[1],
@@ -98,7 +93,7 @@ function callKernelJSFunc(key,oargs,edgeOSKernel){
             if(pid == "0"){
                 const res2 = JSON.stringify(a);
                 const ptra = encodeString(res2);
-                // console.log("kcb",key,res2.length,cb,cbcb);
+                // dlog("kcb",key,res2.length,cb,cbcb);
                 try{
                     const callbackFn = callback(cb);
                     callbackFn(res2.length,ptra,cbcb);
@@ -109,9 +104,11 @@ function callKernelJSFunc(key,oargs,edgeOSKernel){
                 }
             }
             else{
-                // console.log("pcb",pid,key,cb,cbcb);
+                // dlog("pcb",pid,key,cb,cbcb);
                 edgeOSKernel.workers[pid].call('callback',[{cb,cbcb,result:a}]);
             }
+        }).catch(e=>{
+            console.log(e);
         });
     
     }
@@ -222,11 +219,11 @@ export class EdgeOSKernel{
         this.initOpts = initOpts;
         const wasmFs = new WasmFs();
         this.wasmFs = wasmFs;  
-        const originalWriteFileSync = wasmFs.fs.writeFileSync;
-        wasmFs.fs.writeFileSync = (path, text,opts) => {
-            console.log('File written:', path);
-            originalWriteFileSync(path, text,opts);
-        };
+        // const originalWriteFileSync = wasmFs.fs.writeFileSync;
+        // wasmFs.fs.writeFileSync = (path, text,opts) => {
+        //     dlog('File written:', path);
+        //     originalWriteFileSync(path, text,opts);
+        // };
         try{
             this.wasmFs.fs.mkdirSync('/s');
         }catch(e){}
@@ -333,7 +330,7 @@ export class EdgeOSKernel{
                 if (!file.content) continue;
                 let data = ''                
                 const localPath = file.path.slice(fsIpfs.length);
-                // console.log(localPath)
+                dlog(localPath)
               
               for await (const chunk of file.content) {
                     data += chunk.toString()
@@ -386,20 +383,21 @@ export class EdgeOSKernel{
         }
         return selected.cid.toString();
     }        
-    wasmWorker(modulebase64, pid, fshash, command, inputArgs, onDestroy) {
+    wasmWorker(modulebase64, pid, json, onDestroy) {
         // Create an object to later interact with 
         const proxy = {};
-
         // Keep track of the messages being sent
         // so we can resolve them correctly
         let id = 0;
         let idPromises = {};
         const k=this;
-        return new Promise((resolve, reject) => {
+        return new Promise(async (resolve, reject) => {
             // console.log("modulePath",modulePath);
             const worker = new threads.Thread('./EdgeOSWASMWorker.js');
             this.workers[pid] = worker;
-            worker.bind('inited', function(methods) {
+            worker.bind('inited', function(methods, stdout, stderr) {
+                if(stdout || stderr)
+                    dlog("stdout,stderr", stdout, stderr);
                 methods.forEach((method) => {
                     proxy[method] = function(...args) {
                         return new Promise((resolve, reject) => {
@@ -431,11 +429,14 @@ export class EdgeOSKernel{
                     delete idPromises[eventId];
                 }
             });
-            worker.bind('exit', function(code) {
+            worker.bind('exit', function(code,stdout,stderr) {
                 worker.close();
-                console.log('process exited', pid, code );
+                dlog('process exited', pid, code,stdout,stderr );
                 if(onDestroy)
-                    onDestroy(code);
+                    onDestroy(code,stdout,stderr);
+            });
+            worker.bind('log', function({messages}) {
+                console.log(...messages);
             });
 
             // worker.on('message', console.log);
@@ -445,12 +446,13 @@ export class EdgeOSKernel{
                 // transform args to wasm            
 
                 try{  
+                    dlog("syscall", key);
                     const wargs = convertArgsWasm(args,pid);
                     const method:any = k.instance.exports["edgeos_syscall_"+key];
                     
 
                     if(!method){
-                        console.error('syscall not found:', key);
+                        console.log('syscall not found:', key);
                         throw new Error('syscall not found: ' + key);
                     }          
                     let result = method(...wargs);
@@ -458,29 +460,52 @@ export class EdgeOSKernel{
                     return result;
                 }
                 catch(e){
-                    console.error(e);
+                    console.log("err",e);
                     throw e;
                 }
                 
                 
             })
-            worker.on('exit', (code) => {
+            worker.on('exit', (code,stdout,stderr) => {
                 if (code !== 0)
-                console.error(`Worker stopped with exit code ${code}.`);
+                dlog(`Worker stopped with exit code ${code} ${stdout} ${stderr}.`);
             });    
             worker.on("error", function(error) {
                 reject(error);
             });
-            transformWASM(Buffer.from(modulebase64,"base64")).then(workerBytes=>{
+            async function warmpupIpfs(fshash){
+                for await (const file of globalIpfsWrapper.ipfs.get(fshash)) {
+                    // dlog("warming up",file.path);
+                    if (!file.content) {
+                        continue;
+                    }                    
+                    let total = 0;
+                    for await (const chunk of file.content) {
+                        const len = chunk.length;
+                        total += len;
+                        // dlog(`${total / (1024 * 1024)} MB`);
+                    }
+                    // if(!file.content)
+                    //     await warmpupIpfs(file.path)
+                }
+            }
+            let p;
+            // if(fshash)
+            //     p = Promise.resolve(null);
+            // else   
+                // p = transformWASM(Buffer.from(modulebase64,"base64"));
+            // p.then(async (workerBytes)=>{
+                if(json.fshash){
+                    dlog("warming up fs");
+                    await warmpupIpfs(json.fshash);
+                }
                 worker.call('init',[{
-                    wasm: workerBytes, 
-                    imports:definitions,                
-                    processArgs:inputArgs,
-                    fshash, 
-                    command
+                    // wasm: workerBytes, 
+                    imports:definitions,
+                    process:json
                 }]);
     
-            })
+            // })
 
         })
         

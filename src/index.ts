@@ -40,6 +40,10 @@ if(window.electronApi){
 		window.electronApi.log(...arguments);
 		log.apply(console, arguments);
 	};
+	console.error = function () {
+		window.electronApi.log(...arguments);
+		log.apply(console, arguments);
+	};
 	console.log('has API!');        
 }
 

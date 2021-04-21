@@ -37,7 +37,7 @@ export class Bootloader implements IBootloader{
             kernelWASM,
             // fsipfsHash:"",
             initOpts:{
-                wasm:manifestJSON.initWASM,
+                manifest:manifestJSON,
                 dspAddress: this.dspAddress,
                 nexus: {
                     ethEndpoint:this.ethEndpoint,
